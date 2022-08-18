@@ -4,17 +4,18 @@
 
 EAPI=7
 
-inherit check-reqs cmake-utils eapi7-ver
+inherit cmake flag-o-matic
 
 DESCRIPTION="Development platform for CAD/CAE, 3D surface/solid modeling and data exchange"
 HOMEPAGE="https://www.opencascade.com/"
 SRC_URI="https://github.com/Open-Cascade-SAS/OCCT/archive/V7_6_3.tar.gz -> OCCT-V7_6_3.tar.gz"
 
 LICENSE="|| ( Open-CASCADE-LGPL-2.1-Exception-1.0 LGPL-2.1 )"
-SLOT="${PV}"
+SLOT="0"
 KEYWORDS="~amd64 ~x86"
 
-IUSE="debug doc opengl gles2 openvr rapidjson vtk"
+IUSE="debug doc examples ffmpeg freeimage opengl gles2 openvr rapidjson vtk"
+
 
 RDEPEND="dev-lang/tcl:0=
 	dev-lang/tk:0=
@@ -23,13 +24,14 @@ RDEPEND="dev-lang/tcl:0=
 	dev-tcltk/tix
 	media-libs/freetype:2
 	dev-cpp/tbb
-	opengl? (virtual/glu)
-	opengl? (virtual/opengl)
-	gles2? (media-libs/mesa[gles2])
-	rapidjson? (dev-libs/rapidjson)
+	media-libs/libglvnd
+	opengl? ( virtual/glu )
+	gles2? ( media-libs/mesa[gles2] )
+	rapidjson? ( dev-libs/rapidjson )
 	x11-libs/libXmu
 	ffmpeg? ( virtual/ffmpeg )
 	freeimage? ( media-libs/freeimage )
+	openvr? ( media-libs/openvr )
 	vtk? ( sci-libs/vtk[rendering] )
 "
 
@@ -44,15 +46,9 @@ S="${WORKDIR}/OCCT-${MY_PV}"
 
 PATCHES=(
     "${FILESDIR}"/0001-0032697-Configuration-fix-compilation-errors-with-on.patch
+    "${FILESDIR}"/opencascade-7.6.3-avoid-pre-stripping-binaries.patch
+    "${FILESDIR}"/opencascade-7.6.3-fixed-DESTDIR-v2.patch
 )
-
-pkg_setup() {
-	check-reqs_pkg_setup
-}
-
-src_prepare() {
-	cmake-utils_src_prepare
-}
 
 src_configure() {
 	local mycmakeargs=(
@@ -66,20 +62,22 @@ src_configure() {
 		-DUSE_VTK=$(usex vtk)
 		-DUSE_OPENGL=$(usex opengl)
 		-DUSE_RAPIDJSON=$(usex rapidjson)
+		-DCMAKE_INSTALL_PREFIX="${EPREFIX}"/usr
+		-DINSTALL_DIR_LIB=lib64
 	)
 
-	cmake-utils_src_configure
+	cmake_src_configure
+}
+
+src_compile() {
+
+	cmake_src_compile
 }
 
 src_install() {
-	cmake-utils_src_install
-
-	fperms go-w "/usr/$(get_libdir)/${P}/bin/draw.sh"
-
-	if ! use examples; then
-		rm -rf "${ED%/}/usr/$(get_libdir)/${P}/share/${PN}/samples" || die
-	fi
-
-	doins "${S}/${PV}"
+	cmake_src_install
+	# remove "draw harness" helper shell scripts which set variables to default values
+	rm -v "${ED}"/usr/bin/*.sh
+	dodoc README.txt
 }
 

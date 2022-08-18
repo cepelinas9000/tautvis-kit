@@ -1,0 +1,8 @@
+pegtl:
+  generator: github-1
+  packages:
+    - pegtl:
+        github:
+          user: taocpp
+          repo: "PEGTL"
+          query: releases

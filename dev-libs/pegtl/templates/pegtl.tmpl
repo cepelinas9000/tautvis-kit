@@ -1,0 +1,22 @@
+# Copyright 1999-2022 Gentoo Authors
+# Distributed under the terms of the GNU General Public License v2
+
+EAPI=7
+
+inherit cmake
+
+DESCRIPTION="Header-only library for creating parsers according to Parsing Expression Grammar"
+HOMEPAGE="https://github.com/taocpp/PEGTL"
+SRC_URI="{{artifacts[0].src_uri}}"
+
+
+LICENSE="BSL-1.0"
+SLOT="0"
+KEYWORDS="*"
+
+
+post_src_unpack() {
+    if [ ! -d "${S}" ]; then
+	mv taocpp-PEGTL-* "${S}" || die
+    fi
+}
